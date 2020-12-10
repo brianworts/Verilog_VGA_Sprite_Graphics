@@ -83,6 +83,7 @@ module top(
         if (reset)
         begin
             jumping <= 0;
+            sprite_idle <= 1;
         end
         else
         begin
@@ -101,7 +102,13 @@ module top(
             begin
                 sprite_idle <= 1;
             end
-            else
+            
+            if (left_posedge_pulse)
+            begin
+                sprite_idle <= 0;
+            end
+            
+            if (right_posedge_pulse)
             begin
                 sprite_idle <= 0;
             end
@@ -409,6 +416,12 @@ module top(
                     sprite1_visible <= 0;
                     sprite2_visible <= 0;
                     sprite3_visible <= 1;
+                end
+                else if (sprite_idle)
+                begin
+                    sprite1_visible <= 1;
+                    sprite2_visible <= 0;
+                    //sprite3_visible <= 1;
                 end
                 else
                 begin
