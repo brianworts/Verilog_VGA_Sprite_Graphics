@@ -405,6 +405,7 @@ module top(
         begin
             sprite1_visible <= 1;
             sprite2_visible <= 0;
+            sprite3_visible <= 0;///////
         end
         if (H_count_value == 0 && V_count_value == 0)
         begin
@@ -421,7 +422,7 @@ module top(
                 begin
                     sprite1_visible <= 1;
                     sprite2_visible <= 0;
-                    //sprite3_visible <= 1;
+                    sprite3_visible <= 0; /////////////////////
                 end
                 else
                 begin
@@ -464,7 +465,7 @@ module top(
 // wire [3:0] sprite6_blu;
 // wire sprite6_vld;
  
- sprite sprite1(
+ sprite1 sprite1(
     .CLK                   (clk          ),
     .RESET                 (reset        ),
     .SPRITE_ORIGIN_OFFSET_X(sprite1_left ),
@@ -476,7 +477,7 @@ module top(
     .GRN                   (sprite1_grn  ),
     .BLU                   (sprite1_blu  ),
     .VALID                 (sprite1_vld  ) );
- sprite sprite2(
+ sprite2 sprite2(
     .CLK                   (clk          ),
     .RESET                 (reset        ),
     .SPRITE_ORIGIN_OFFSET_X(sprite2_left ),
@@ -489,7 +490,7 @@ module top(
     .BLU                   (sprite2_blu  ),
     .VALID                 (sprite2_vld  ) );
     
- sprite sprite3(
+ sprite3 sprite3(
     .CLK                   (clk          ),
     .RESET                 (reset        ),
     .SPRITE_ORIGIN_OFFSET_X(sprite3_left ),
