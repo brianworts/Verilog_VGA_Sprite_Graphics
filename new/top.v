@@ -25,7 +25,6 @@ module top(
     wire clk;
     wire locked;
 
-    //reg [18:0] lfsr;        // for Linear Feedback Shift Register
     
     always @ (posedge clk)
     begin
@@ -34,7 +33,6 @@ module top(
     end
     
     wire [6:0] jump_vert;
-    //wire enable_jump_counter;
     reg jump_raw_p1;
     reg jump;
     
@@ -48,6 +46,7 @@ module top(
     reg stop;
     
     always @(posedge clk) 
+    //Avoid metastability for inputs
     begin 
         jump_raw_p1 <= jump_raw;
         jump <= jump_raw_p1;
@@ -79,6 +78,7 @@ module top(
     reg jumpdone;
     reg sprite_idle;
     always @(posedge clk) 
+    //Sprite State Control
     begin 
         if (reset)
         begin
@@ -112,30 +112,10 @@ module top(
             begin
                 sprite_idle <= 0;
             end
-            /*
-            if (~jump)
-            begin
-                jumping <= 0;
-            end */
-           // if (enable_V_counter)
-            //begin
-             //   jump_recieved <= 0;
+            
          end
     end
-    
-     //assign enable_jump_counter = (jump_recieved || jumping);
-    // values to use for simulation
-//    `define ACTIVE_Hend (63)
-//    `define FRONT_PORCH_Hend (65)
-//    `define SYNC_PULSE_Hend (75)
-//    `define BACKPORCH_Hend (79)
-    
-//    `define ACTIVE_Vend (40)
-//    `define FRONT_PORCH_Vend (43)
-//    `define SYNC_PULSE_Vend (46)
-//    `define BACKPORCH_Vend (52)
-
-
+   
     `define ACTIVE_Hend (639)
     `define FRONT_PORCH_Hend (655)
     `define SYNC_PULSE_Hend (751)
@@ -166,24 +146,14 @@ module top(
      reg signed [10:0] sprite2_left; //x coord
      reg signed [9:0]  sprite3_top; //y coord
      reg signed [10:0] sprite3_left; //x coord
-//     reg signed [9:0]  sprite4_top; //y coord
-//     reg signed [10:0] sprite4_left; //x coord
-//     reg signed [9:0]  sprite5_top; //y coord
-//     reg signed [10:0] sprite5_left; //x coord
-//     reg signed [9:0]  sprite6_top; //y coord
-//     reg signed [10:0] sprite6_left; //x coord
+
      reg signed [7:0] sprite1_vx_dir; //actual x direction
      reg signed [7:0] sprite1_vy_dir; //actual y direction
      reg signed [7:0] sprite2_vx_dir; //actual x direction
      reg signed [7:0] sprite2_vy_dir; //actual y direction
      reg signed [7:0] sprite3_vx_dir; //actual x direction
      reg signed [7:0] sprite3_vy_dir; //actual y direction
-//     reg signed [7:0] sprite4_vx_dir; //actual x direction
-//     reg signed [7:0] sprite4_vy_dir; //actual y direction
-//     reg signed [7:0] sprite5_vx_dir; //actual x direction
-//     reg signed [7:0] sprite5_vy_dir; //actual y direction
-//     reg signed [7:0] sprite6_vx_dir; //actual x direction
-//     reg signed [7:0] sprite6_vy_dir; //actual y direction
+
 
      reg [5:0] color;
     reg [7:0] oneSixtyCounter; 
@@ -191,10 +161,11 @@ module top(
    
         
     always @ (posedge clk)
+    //Drive Vy of sprite 3 if jumping
      begin
          if(reset)
          begin
-            oneSixtyCounter <= 0;
+            oneSixtyCounter <= 0; //This is only counting to 20 so can be smaller
             sprite3_vy_dir <= 0; 
             jumpdone <= 0;
          end
@@ -237,6 +208,7 @@ module top(
     
    // Sprite animation mode
    always @ (posedge clk)
+   //Drive All Sprite's X velocities
      begin
          if(reset)
          begin
@@ -249,90 +221,29 @@ module top(
              sprite2_vx_dir <= vx_mag; 
              sprite2_vy_dir <= vy_mag; 
              sprite3_vx_dir <= vx_mag; 
-             //sprite3_vy_dir <= vy_mag; 
-//             sprite4_vx_dir <= -vx_mag; 
-//             sprite4_vy_dir <= vy_mag; 
-//             sprite5_vx_dir <= -vx_mag; 
-//             sprite5_vy_dir <= vy_mag; 
-//             sprite6_vx_dir <= -vx_mag; 
-//             sprite6_vy_dir <= vy_mag; 
+             //sprite3_vy_dir <= vy_mag; //Driven elsewhere
          end
          else //if (H_count_value == 0 && V_count_value == 0)
          begin
-             
-             if (right_posedge_pulse)  //Left border
+            
+             if (right_posedge_pulse)  //Right input
              begin
-                 sprite1_vx_dir <= 2; //lfsr[2:0]+1;
+                 sprite1_vx_dir <= 2;
                  sprite2_vx_dir <= 2;
                  sprite3_vx_dir <= 2;
              end
-             else if (left_posedge_pulse)
+             else if (left_posedge_pulse) //Left Input
              begin
-                sprite1_vx_dir <= -2; //lfsr[2:0]+1;
+                sprite1_vx_dir <= -2; 
                 sprite2_vx_dir <= -2;
                 sprite3_vx_dir <= -2;
              end
-             else if (stop_posedge_pulse)
+             else if (stop_posedge_pulse) //Idle Input
              begin
-                sprite1_vx_dir <= 0; //lfsr[2:0]+1;
+                sprite1_vx_dir <= 0;
                 sprite2_vx_dir <= 0;
                 sprite3_vx_dir <= 0;
              end
-            
-                 /*
-             else if((sprite1_left + length) >= `ACTIVE_Hend) //Right border
-                 sprite1_vx_dir <= -2; //-lfsr[2:0]-1;
-             if(sprite1_top <= $signed(10'h0)) //top border
-                 sprite1_vy_dir <= lfsr[2:0]+1;
-             else if((sprite1_top + height) >= `ACTIVE_Vend) //bottom border
-                 sprite1_vy_dir <= -lfsr[2:0]-1;
-            
-             if(sprite2_left <= $signed(11'h0)) 
-                 sprite2_vx_dir <= lfsr[5:3]+1;
-             
-             else if((sprite2_left + length) >= `ACTIVE_Hend)
-                 sprite2_vx_dir <= -lfsr[5:3]-1;
-             if(sprite2_top <= $signed(10'h0))
-                 sprite2_vy_dir <= lfsr[5:3]+1;
-             else if((sprite2_top + height) >= `ACTIVE_Vend)
-                 sprite2_vy_dir <= -lfsr[5:3]-1;
-
-             if(sprite3_left <= $signed(11'h0)) 
-                 sprite3_vx_dir <= lfsr[8:6]+1;
-             else if((sprite3_left + length) >= `ACTIVE_Hend)
-                 sprite3_vx_dir <= -lfsr[8:6]-1;
-             if(sprite3_top <= $signed(10'h0))
-                 sprite3_vy_dir <= lfsr[8:6]+1;
-             else if((sprite3_top + height) >= `ACTIVE_Vend)
-                 sprite3_vy_dir <= -lfsr[8:6]-1;
-            */
-//             if(sprite4_left <= $signed(11'h0)) 
-//                 sprite4_vx_dir <= lfsr[2:0]+1;
-//             else if((sprite4_left + length) >= `ACTIVE_Hend)
-//                 sprite4_vx_dir <= -lfsr[2:0]-1;
-//             if(sprite4_top <= $signed(10'h0))
-//                 sprite4_vy_dir <= lfsr[2:0]+1;
-//             else if((sprite4_top + height) >= `ACTIVE_Vend)
-//                 sprite4_vy_dir <= -lfsr[2:0]-1;
-
-//             if(sprite5_left <= $signed(11'h0)) 
-//                 sprite5_vx_dir <= lfsr[5:3]+1;
-//             else if((sprite5_left + length) >= `ACTIVE_Hend)
-//                 sprite5_vx_dir <= -lfsr[5:3]-1;
-//             if(sprite5_top <= $signed(10'h0))
-//                 sprite5_vy_dir <= lfsr[5:3]+1;
-//             else if((sprite5_top + height) >= `ACTIVE_Vend)
-//                 sprite5_vy_dir <= -lfsr[5:3]-1;
-
-//             if(sprite6_left <= $signed(11'h0)) 
-//                 sprite6_vx_dir <= lfsr[8:6]+1;
-//             else if((sprite6_left + length) >= `ACTIVE_Hend)
-//                 sprite6_vx_dir <= -lfsr[8:6]-1;
-//             if(sprite6_top <= $signed(10'h0))
-//                 sprite6_vy_dir <= lfsr[8:6]+1;
-//             else if((sprite6_top + height) >= `ACTIVE_Vend)
-//                 sprite6_vy_dir <= -lfsr[8:6]-1;
-
          end
      end
 
@@ -350,13 +261,6 @@ module top(
              
              sprite3_top <= 250;
              sprite3_left <= 300;
-             
-//             sprite4_top <= 50;
-//             sprite4_left <= 50;
-//             sprite5_top <= 150;
-//             sprite5_left <= 150;
-//             sprite6_top <= 250;
-//             sprite6_left <= 250;
          end
          else
          begin
@@ -366,20 +270,7 @@ module top(
                 sprite2_left <= sprite2_left + sprite2_vx_dir;
                 sprite3_left <= sprite3_left + sprite3_vx_dir;
                 sprite3_top <= sprite3_top + sprite3_vy_dir;
-             /*
-                 sprite1_top <= sprite1_top + sprite1_vy_dir;
-                 
-                 sprite2_top <= sprite2_top + sprite2_vy_dir;
-                 sprite2_left <= sprite2_left + sprite2_vx_dir;
-                 sprite3_top <= sprite3_top + sprite3_vy_dir;
-                 sprite3_left <= sprite3_left + sprite3_vx_dir;
-                 */
-//                 sprite4_top <= sprite4_top + sprite4_vy_dir;
-//                 sprite4_left <= sprite4_left + sprite4_vx_dir;
-//                 sprite5_top <= sprite5_top + sprite5_vy_dir;
-//                 sprite5_left <= sprite5_left + sprite5_vx_dir;
-//                 sprite6_top <= sprite6_top + sprite6_vy_dir;
-//                 sprite6_left <= sprite6_left + sprite6_vx_dir;
+             
              end
          end
      end
@@ -391,9 +282,10 @@ module top(
  reg [7:0] SlowDownSwitching;
  
  always @(posedge clk)
+ //Drive Sprite Display
  begin
      if (reset)
-     begin
+     begin //Show sprite 1
         sprite1_visible <= 1'b1;
         sprite2_visible <= 1'b0;
         sprite3_visible <= 1'b0;
@@ -401,7 +293,7 @@ module top(
      end
      else
      begin
-        if (jumpdone)
+        if (jumpdone) //Jump is over, go back to sprite 1
         begin
             sprite1_visible <= 1;
             sprite2_visible <= 0;
@@ -409,20 +301,20 @@ module top(
         end
         if (H_count_value == 0 && V_count_value == 0)
         begin
-            if (SlowDownSwitching % 8 == 0)
+            if (SlowDownSwitching % 8 == 0) //switch sprite every 8 counts
             begin
                 SlowDownSwitching <= SlowDownSwitching + 1;
-                if (jumping)
+                if (jumping) //only show sprite 3
                 begin
                     sprite1_visible <= 0;
                     sprite2_visible <= 0;
                     sprite3_visible <= 1;
                 end
-                else if (sprite_idle)
+                else if (sprite_idle) //Only show sprite 1
                 begin
                     sprite1_visible <= 1;
                     sprite2_visible <= 0;
-                    sprite3_visible <= 0; /////////////////////
+                    sprite3_visible <= 0; 
                 end
                 else
                 begin
@@ -452,18 +344,7 @@ module top(
  wire [3:0] sprite3_grn;
  wire [3:0] sprite3_blu;
  wire sprite3_vld;
-// wire [3:0] sprite4_red;
-// wire [3:0] sprite4_grn;
-// wire [3:0] sprite4_blu;
-// wire sprite4_vld;
-// wire [3:0] sprite5_red;
-// wire [3:0] sprite5_grn;
-// wire [3:0] sprite5_blu;
-// wire sprite5_vld;
-// wire [3:0] sprite6_red;
-// wire [3:0] sprite6_grn;
-// wire [3:0] sprite6_blu;
-// wire sprite6_vld;
+
  
  sprite1 sprite1(
     .CLK                   (clk          ),
@@ -502,62 +383,8 @@ module top(
     .GRN                   (sprite3_grn  ),
     .BLU                   (sprite3_blu  ),
     .VALID                 (sprite3_vld  ) ); 
-// sprite sprite4(
-//    .CLK                   (clk          ),
-//    .RESET                 (reset        ),
-//    .SPRITE_ORIGIN_OFFSET_X(sprite4_left ),
-//    .SPRITE_ORIGIN_OFFSET_Y(sprite4_top  ),
-//    .VISIBLE               (1'b1         ),
-//    .RASTER_X              (H_count_value),
-//    .RASTER_Y              (V_count_value),
-//    .RED                   (sprite4_red  ),
-//    .GRN                   (sprite4_grn  ),
-//    .BLU                   (sprite4_blu  ),
-//    .VALID                 (sprite4_vld  ) );
-// sprite sprite5(
-//    .CLK                   (clk          ),
-//    .RESET                 (reset        ),
-//    .SPRITE_ORIGIN_OFFSET_X(sprite5_left ),
-//    .SPRITE_ORIGIN_OFFSET_Y(sprite5_top  ),
-//    .VISIBLE               (1'b1         ),
-//    .RASTER_X              (H_count_value),
-//    .RASTER_Y              (V_count_value),
-//    .RED                   (sprite5_red  ),
-//    .GRN                   (sprite5_grn  ),
-//    .BLU                   (sprite5_blu  ),
-//    .VALID                 (sprite5_vld  ) );
-// sprite sprite6(
-//    .CLK                   (clk          ),
-//    .RESET                 (reset        ),
-//    .SPRITE_ORIGIN_OFFSET_X(sprite6_left ),
-//    .SPRITE_ORIGIN_OFFSET_Y(sprite6_top  ),
-//    .VISIBLE               (1'b1         ),
-//    .RASTER_X              (H_count_value),
-//    .RASTER_Y              (V_count_value),
-//    .RED                   (sprite6_red  ),
-//    .GRN                   (sprite6_grn  ),
-//    .BLU                   (sprite6_blu  ),
-//    .VALID                 (sprite6_vld  ) );
 
  always @ (*)
-//    if (sprite6_vld)
-//    begin
-//        VGA_R = sprite6_red;
-//        VGA_G = sprite6_grn;
-//        VGA_B = sprite6_blu;
-//    end
-//    else if (sprite5_vld)
-//    begin
-//        VGA_R = sprite5_red;
-//        VGA_G = sprite5_grn;
-//        VGA_B = sprite5_blu;
-//    end
-//    else if (sprite4_vld)
-//    begin
-//        VGA_R = sprite4_red;
-//        VGA_G = sprite4_grn;
-//        VGA_B = sprite4_blu;
-//    end
     if (sprite3_vld)
     begin
         VGA_R = sprite3_red;
@@ -582,27 +409,6 @@ module top(
         VGA_G = 0;
         VGA_B = 0;
     end
-// always @ (*)
-//     begin
-        
-//     //animating a square
-//     //basically just a box
-//     if(H_count_value <= `ACTIVE_Hend && V_count_value <= `ACTIVE_Vend)
-//     begin
-//         if(V_count_value >= top && V_count_value <= (top + height) && H_count_value >= left && H_count_value <= (left + length))
-//         begin
-//             VGA_R = {color[5:4],2'b11};
-//             VGA_G = {color[3:2],2'b11};
-//             VGA_B = {color[1:0],2'b11};
-//         end
-//         else
-//         begin
-//             VGA_R = 4'h0;
-//             VGA_G = 4'h0;
-//             VGA_B = 4'h0;
-//         end
-//     end
-// end 
 
 `else
     
@@ -733,18 +539,6 @@ module top(
 
 `endif
     
-    //blk_mem_gen_0 ram(clk, write_enable, write_addr, d_in, clk, read_addr, d_out);
     clk_wiz_0 CLKWIZ0(.clk_out1(clk), .resetn(1'b1), .locked(locked), .clk_in1(clk_in1));
 
-    // A linear feedback shift register, LFSR, which produces a pseudo-random bit stream
-    
-//    always @ (posedge clk)
-//    if (reset)
-//        lfsr <= 19'h7FFFF;                                            // Cannot initialize to all 0's!!
-//    else
-//    begin
-//        lfsr[0]     <= lfsr[18] ^ lfsr[17] ^ lfsr[16] ^ lfsr[13];     // fill in with XORs
-//        lfsr[18:1]  <= lfsr[17:0];                                    // shift left
-//    end
-    
 endmodule
